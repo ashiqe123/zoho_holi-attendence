@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
+{% load mathfilters %}
 <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"> -->
 
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> -->
@@ -9,10 +10,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.js"></script>
 <!-- <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script> -->
 <!-- <script src="path/to/jquery.min.js"></script> -->
-<script src="path/to/bootstrap.min.js"></script>
 
 <style>
-    .modal {
+    .searchbar {
         z-index: 9999;
     }
 
@@ -68,12 +68,67 @@
     } */
 
 </style>
-<div class="container-fluid">
-    <!-- <div class="head text-light p-3">
-        <h4>CALENDAR</h4>
-    </div> -->
+<div class="row container-fluid">
 
-    <div class="card-body" id="exTab2">
+    <div class="col-3 col-md-3 col-sm-3 col-lg-3">
+        <div class="header ">
+            <h3>All Holyday</h3>
+          </div>
+    
+          <!-- style="display: flex;" -->
+          <div class="searchbar">
+            <input type="text" id="searchInput" class="form-control text-dark bg-white" placeholder="Search Items..."
+                   style="color: rgb(255, 255, 255); background: transparent; margin-right: 5px;">
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <a class="btn btn-outline-warning mt-2 p-2" href="#" data-bs-toggle="dropdown" aria-haspopup="true"
+                       aria-expanded="false" role="button" style="width: 60px;">
+                        <i class="fa fa-filter "></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item text-light" href="#" onclick="reloadPage()">All</a>
+                        <a class="dropdown-item text-light" onclick="sortTableByMonthAsc()">Month</a>
+                        <a class="dropdown-item text-light" onclick="sortTableByCountAsc()">Count</a>
+                    </div>
+                </div>
+                
+                
+                <div class="col-md-4"></div>
+                <div class="col-md-4" style="text-align: right;">
+                    <a class="btn btn-outline-warning p-2 " href="{% url 'holiday_add' %}" style="margin-top: 8px;">
+                        <i class="fa fa-plus"></i><span>New</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+          
+          <table class="table table-borderless mt-3" id="mytable">
+            <thead>
+              <tr >
+                <th style="color: rgb(214, 141, 5);text-align: left;">Month</th>
+                <th style="color: rgb(214, 141, 5);text-align:right">Holiday</th>
+              </tr>
+              
+            </thead>
+            
+            <tbody id="tableBody">
+                {% for key, value in formatted_event_counts.items %}
+                <tr class="text-light mt-2 pt-1 clickable-row" data-href="{% url 'holidays' key %}">
+
+                        <td>{{ value.month }}</td>
+                        <td>{{ value.count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            
+            
+          </table>
+    </div>
+   
+
+    <div class="card-body col-9 col-md-9 col-lg-9 col-sm-9" id="exTab2">
         <a id="close" type="button" class="btn btn-danger" href="{% url 'holiday_list' %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
 
         <ul class="nav nav-tabs row">
@@ -148,8 +203,78 @@
 
 
 </div>
+<script>
+    function reloadPage() {
+        // Get the current URL
+        var currentUrl = window.location.href;
 
+        // Reload the page
+        window.location.href = currentUrl;
+    }
+</script>
+<script>
+    function sortTableByCountAsc() {
+        var rows = $('tr.clickable-row').get();
+        console.log(rows);
+        console.log('Sorting by Count');
 
+        rows.sort(function (a, b) {
+            var countA = parseInt($(a).find('td:eq(1)').text()); // Assuming count is in the second column
+            var countB = parseInt($(b).find('td:eq(1)').text());
+
+            return countA - countB;
+        });
+
+        $.each(rows, function (index, row) {
+            $('#mytable tbody').append(row);
+        });
+    }
+</script>
+
+<script>
+    function sortTableByMonthAsc() {
+        var rows = $('tr.clickable-row').get();
+        console.log(rows);
+        console.log('suuupi');
+
+        rows.sort(function (a, b) {
+            var monthA = $(a).find('td:eq(0)').text(); // Assuming month is in the first column
+            var monthB = $(b).find('td:eq(0)').text();
+
+            var yearA = $(a).find('td:eq(1)').text(); // Assuming year is in the second column
+            var yearB = $(b).find('td:eq(1)').text();
+
+            var monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            var monthAIndex = monthOrder.indexOf(monthA);
+            var monthBIndex = monthOrder.indexOf(monthB);
+
+            if (yearA === yearB) {
+                return monthAIndex - monthBIndex;
+            } else {
+                return yearA - yearB;
+            }
+        });
+
+        $.each(rows, function (index, row) {
+            $('#mytable tbody').append(row);
+        });
+    }
+</script>
+
+<script>
+    jQuery(document).ready(function($) {
+    $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+    });
+    // Add this inside the $(document).ready function
+    $("#searchInput").on("keyup", function() {
+        searchFunction();
+});
+
+});
+   
+   
+</script>
 
 <script>
     $(document).ready(function () {
@@ -202,12 +327,12 @@
     var defaultDate = "{{ default }}";
     // const currentDate = new Date();
     $('#calendar').fullCalendar({
-        header: {
-            left: 'prev,next today',
+            header: {
+                left: 'prev,next today',
                 center: 'title',
                 right: 'month,agendaWeek,agendaDay',
-        },
-        initialView: 'dayGridMonth',
+            },
+            initialView: 'dayGridMonth',
         defaultDate: defaultDate,
         // navLinks: true,
         eventLimit: true,
@@ -253,6 +378,38 @@
 
     });
 </script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+   function searchFunction() {
+    console.log("Search function called"); // Check if the function is called
 
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("searchInput");
+    filter = input.value.toLowerCase();
+    table = document.getElementById("mytable");
+    tr = table.getElementsByTagName("tr");
 
+    for (i = 1; i < tr.length; i++) {
+        let rowVisible = false;
+        td = tr[i].getElementsByTagName("td");
+        for (j = 0; j < td.length; j++) {
+            if (td[j]) {
+                txtValue = td[j].textContent || td[j].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    rowVisible = true;
+                    break;
+                }
+            }
+        }
+
+        // Show/hide the row based on the search results
+        tr[i].style.display = rowVisible ? "" : "none";
+    }
+}
+
+function demo(){
+    console.log('hai')
+}
+</script>
+  
 {% endblock %}

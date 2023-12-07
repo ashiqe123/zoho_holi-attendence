@@ -21044,8 +21044,36 @@ def holidays(request, date):
             event_counts[month_year] += 1
 
     event_counts_json = json.dumps(event_counts)
-
+    print(event_counts_json)
     default = month_name + " " + year
+    event_counts = {}
+    formatted_event_counts = {}
+
+    for event in all_events:
+        month_year = event.start.strftime('%Y-%m')  # Format: 'YYYY-MM'
+        year, month = map(int, month_year.split('-'))
+        
+        event_duration = (event.end - event.start).days+1 if event.end else 1
+
+        print(event_duration)
+    # If the month_year is not in the dictionary, add it with a count of 1
+        if month_year not in event_counts:
+            event_counts[month_year] = event_duration
+        else:
+        # If the month_year is already in the dictionary, increment the count
+            event_counts[month_year] += event_duration
+        
+
+
+    for key, value in event_counts.items():
+        # year, month = key.split('-')
+        year, month = map(int, key.split('-'))
+        total_days = calendar.monthrange(year, month)[1]
+        month_name = calendar.month_name[int(month)]
+        formatted_month_year = f"{month_name}-{year}"
+        # formatted_event_counts[formatted_month_year] = value   
+        formatted_event_counts[formatted_month_year] = {'count': value, 'total_days': total_days,'month':month_name,'year':year}
+
     context = {
         "events": all_events,
         "event_counts_json": event_counts_json,
@@ -21053,6 +21081,8 @@ def holidays(request, date):
         "default": default,
         "event_dict": event_dict,
         "eve": events,
+        'formatted_event_counts':formatted_event_counts,
+        'month':month,
     }
     return render(request, 'holidays.html', context)
 
