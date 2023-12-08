@@ -41,10 +41,10 @@
             </div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-1">
             
         </div>
-        <div class="col-md-5">
+        <div class="col-md-6">
           <div class="dropdown d-flex">
             <a class="btn text-center px-4 pt-1 btn-outline-warning" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button" >
               <i class="fa fa-filter mt-1"></i>
@@ -54,8 +54,10 @@
               <a class="dropdown-item" href="{% url 'view_sales_order_Draft' %}">Draft</a>
               <a class="dropdown-item" href="{% url 'view_sales_order_approved' %}">Approved</a>
             </div>
-            
-            <a style="height: 5vh; margin-left: 2vh;" class="btn btn-outline-warning text-right px-3 py-2" role="button" style="margin-left: 5px;" onclick="ExportToExcel('xlsx')" >
+            <a style="height: 5vh; margin-left: 2vh;" class="btn btn-outline-warning text-right" role="button" style="margin-left: 5px;" onclick="ExportToExcel('xlsx')" >
+                <i class="fa fa-arrow-down" style="font-size: large;"></i><span style="font-size: 3vh;">Import</span>
+              </a>
+            <a style="height: 5vh; margin-left: 2vh;" class="btn btn-outline-warning text-right " role="button" style="margin-left: 5px;" onclick="ExportToExcel('xlsx')" >
                 <i class="fa fa-arrow-up" style="font-size: large;"></i><span style="font-size: 3vh;">Export</span>
               </a>
               

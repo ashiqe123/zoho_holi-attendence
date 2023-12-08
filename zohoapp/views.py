@@ -21184,3 +21184,5 @@ def holiday_list(request):
     }
     return render(request, 'holiday_list.html',context)
     
+def do_comments(request,date):
+    return render(request,'holidays.html')

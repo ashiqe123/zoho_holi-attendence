@@ -1549,7 +1549,8 @@ class Events(models.Model):
     start = models.DateTimeField(null=True,blank=True)
     end = models.DateTimeField(null=True,blank=True)
     company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
-
+    comments=models.CharField(max_length=500,null=True,blank=True)
+    
 class projectfiles(models.Model):
     attachment=models.FileField(upload_to='doc/',null=True)
     proj=models.ForeignKey(project1,on_delete=models.CASCADE)
