@@ -985,9 +985,11 @@ urlpatterns = [
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
 
-    path('do_comments/<str:date>',views.do_comments,name='do_comments'),
+    path('do_comments',views.do_comments,name='do_comments'),
 
     path('all_events', views.all_events, name='all_events'),
+    path('mail_holyday',views.mail_holyday,name='mail_holyday'),
+    path('xl_to_django',views.xl_to_django,name='xl_to_django')
     
     
     

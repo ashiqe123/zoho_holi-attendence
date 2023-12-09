@@ -21010,13 +21010,15 @@ from datetime import datetime, timedelta
 import calendar
 import json
 from .models import Events
+import pandas as pd
 
 def holidays(request, date):
+    global valu
     company = company_details.objects.get(user=request.user)
     all_events = Events.objects.filter(company=company)
     event_counts = {}
     event_dict = {}
-
+    valu = date
     month_name, year = date.split('-')
 
     month_number = list(calendar.month_abbr).index(month_name[:3])
@@ -21026,18 +21028,18 @@ def holidays(request, date):
     else:
         end_date = start_date.replace(month=month_number + 1)
     end_date -= timedelta(days=1)
-
-    events = Events.objects.filter(start__gte=start_date, start__lt=end_date)
+    event_comment = Events_comments.objects.get(company = company)
+    events = Events.objects.filter(start_date__gte=start_date, start_date__lt=end_date)
 
     for event in events:
-        day = event.start.day
+        day = event.start_date.day
         if day in event_dict:
             event_dict[day].append(event.name)
         else:
             event_dict[day] = [event.name]
 
     for event in all_events:
-        month_year = event.start.strftime('%Y-%m')
+        month_year = event.start_date.strftime('%Y-%m')
         if month_year not in event_counts:
             event_counts[month_year] = 1
         else:
@@ -21050,10 +21052,10 @@ def holidays(request, date):
     formatted_event_counts = {}
 
     for event in all_events:
-        month_year = event.start.strftime('%Y-%m')  # Format: 'YYYY-MM'
+        month_year = event.start_date.strftime('%Y-%m')  # Format: 'YYYY-MM'
         year, month = map(int, month_year.split('-'))
         
-        event_duration = (event.end - event.start).days+1 if event.end else 1
+        event_duration = (event.end_date - event.start_date).days+1 if event.end_date else 1
 
         print(event_duration)
     # If the month_year is not in the dictionary, add it with a count of 1
@@ -21083,6 +21085,7 @@ def holidays(request, date):
         "eve": events,
         'formatted_event_counts':formatted_event_counts,
         'month':month,
+        'event_comment':event_comment,
     }
     return render(request, 'holidays.html', context)
 
@@ -21096,8 +21099,8 @@ def all_events(request):
     for event in all_events:
         out.append({
             'title': event.name,
-            'start': event.start.date(),
-            'end': (event.end + timedelta(days=1)).date() if event.end else event.start.date(),
+            'start': event.start_date.date(),
+            'end': (event.end_date + timedelta(days=1)).date() if event.end_date else event.start.date(),
             'color': 'red',
             'allDay': 'true',
         })
@@ -21111,7 +21114,7 @@ def add_holiday(request):
         start = request.POST['start']
         end = request.POST['end']
     
-        event = Events(name=title, start=start, end=end,company=company)
+        event = Events(name=title, start_date=start, end_date=end,company=company)
         event.save()
         return redirect('holiday_list')
     return redirect('holiday_list')
@@ -21130,10 +21133,10 @@ def edit_holiday(request,id):
     if request.user.is_authenticated:
         if request.method=='POST':
             holi.name=request.POST.get('title')  
-            holi.start=request.POST.get('start')  
-            holi.end=request.POST.get('end')  
+            holi.start_date=request.POST.get('start')  
+            holi.end_date=request.POST.get('end')  
             holi.save()
-    start_date_string = holi.start  # Example: '2023-11-15'
+    start_date_string = holi.start_date  # Example: '2023-11-15'
     start_date = datetime.strptime(start_date_string, '%Y-%m-%d')
     formatted_month_year = start_date.strftime('%B-%Y')
     print(formatted_month_year)
@@ -21148,15 +21151,18 @@ def remove(request,id):
 
 def holiday_list(request):
     company = company_details.objects.get(user=request.user)
+    if not  Events_comments.objects.filter(company=company).exists():
+        event = Events_comments(company=company,comments='Comment')
+        event.save()
     all_events = Events.objects.filter(company=company)
     event_counts = {}
     formatted_event_counts = {}
 
     for event in all_events:
-        month_year = event.start.strftime('%Y-%m')  # Format: 'YYYY-MM'
+        month_year = event.start_date.strftime('%Y-%m')  # Format: 'YYYY-MM'
         year, month = map(int, month_year.split('-'))
         
-        event_duration = (event.end - event.start).days+1 if event.end else 1
+        event_duration = (event.end_date - event.start_date).days+1 if event.end_date else 1
 
         print(event_duration)
     # If the month_year is not in the dictionary, add it with a count of 1
@@ -21184,5 +21190,74 @@ def holiday_list(request):
     }
     return render(request, 'holiday_list.html',context)
     
-def do_comments(request,date):
-    return render(request,'holidays.html')
+def do_comments(request):
+    company = company_details.objects.get(user=request.user)
+    if request.method == 'POST':
+        comment = request.POST['comments']
+        event = Events_comments.objects.get(company=company)
+        event.comments = comment
+        event.save()
+        print(comment)
+    return redirect('holidays',valu)
+
+
+def mail_holyday(request):
+
+        if request.method == 'POST':
+                
+            subject =request.POST['subject']
+            message = request.POST['messege']
+            email = request.POST['email']
+            files = request.FILES.getlist('attach')
+
+            try:
+                mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, [email])
+                for f in files:
+                    mail.attach(f.name, f.read(), f.content_type)
+                mail.send()
+                return render(request, 'mail_holyday.html')
+            except:
+               return render(request, 'mail_holyday.html')
+
+        return render(request, 'mail_holyday.html')
+
+
+
+def xl_to_django(request):
+    company = company_details.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        excel_file = request.FILES['import']
+        
+        # Read the Excel file using pandas
+        df = pd.read_excel(excel_file)
+        
+        # Iterate through rows and create instances of YourModel
+        for index, row in df.iterrows():
+            start_date = row['start_date']
+            end_date = row['end_date']
+            name = row['name']
+
+            # Check if an entry with the same start date, end date, name, and company already exists
+            existing_entry = Events.objects.filter(
+                start_date=start_date,
+                end_date=end_date,
+                name=name,
+                company=company
+            ).first()
+
+            # If the entry does not exist, create a new one
+            if not existing_entry:
+                Events.objects.create(
+                    start_date=start_date,
+                    end_date=end_date,
+                    name=name,
+                    company=company
+                    # Add other fields as needed
+                )
+
+
+        # Redirect or render a response
+        return redirect('holiday_list')  # Replace 'success_page' with your success page URL
+
+    return redirect('holiday_list')

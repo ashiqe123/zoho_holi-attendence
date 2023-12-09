@@ -1543,13 +1543,7 @@ class projectcomment(models.Model):
     comment=models.CharField(max_length=300)
     proj=models.ForeignKey(project1,on_delete=models.CASCADE)
     
-class Events(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255,null=True,blank=True)
-    start = models.DateTimeField(null=True,blank=True)
-    end = models.DateTimeField(null=True,blank=True)
-    company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
-    comments=models.CharField(max_length=500,null=True,blank=True)
+
     
 class projectfiles(models.Model):
     attachment=models.FileField(upload_to='doc/',null=True)
@@ -1670,3 +1664,19 @@ class cust_comment(models.Model):
     custcom = models.ForeignKey(customer,on_delete=models.CASCADE,null=True,blank=True)
     user=models.ForeignKey(User,on_delete=models.CASCADE,null=True,default='') 
     comment = models.CharField(max_length=250,null=True)
+
+
+class Events(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255,null=True,blank=True)
+    start_date = models.DateTimeField(null=True,blank=True)
+    end_date = models.DateTimeField(null=True,blank=True)
+    company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
+    comments=models.CharField(max_length=500,null=True,blank=True)
+
+
+class Events_comments(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
+    comments=models.CharField(max_length=500,null=True,blank=True)
