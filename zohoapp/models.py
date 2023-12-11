@@ -1680,3 +1680,18 @@ class Events_comments(models.Model):
 
     company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
     comments=models.CharField(max_length=500,null=True,blank=True)
+
+class Attendance(models.Model):
+    reason = models.CharField(max_length=255,null=True,blank=True)
+    start_date = models.DateTimeField(null=True,blank=True)
+    end_date = models.DateTimeField(null=True,blank=True)
+    company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
+    leave=models.CharField(max_length=500,null=True,blank=True)
+    payroll = models.ForeignKey(Payroll, on_delete=models.CASCADE)
+
+
+class Attendance_comments(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    company = models.ForeignKey(company_details,on_delete=models.CASCADE,null=True,blank=True)
+    comments=models.CharField(max_length=500,null=True,blank=True)

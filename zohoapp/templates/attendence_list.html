@@ -99,7 +99,7 @@
                 <i class="fa fa-arrow-up" style="font-size: large;"></i><span style="font-size: 3vh;">Export</span>
               </a>
               
-            <a style="height: 5vh; margin-left: 2vh;" class="btn btn-outline-warning text-right px-3 py-2" role="button" style="margin-left: 5px;"  href="{% url 'holiday_add' %}">
+            <a style="height: 5vh; margin-left: 2vh;" class="btn btn-outline-warning text-right px-3 py-2" role="button" style="margin-left: 5px;"  href="{% url 'attendence_add' %}">
                 <i class="fa fa-plus" style="font-size: large;"></i><span style="font-size: 3vh;">New</span>
               </a>
           </div>
@@ -117,7 +117,7 @@
               </button>
             </div>
             <div class="modal-body">
-              <form id="commentForm" method="post" action="{% url 'xl_to_django' %}" enctype="multipart/form-data">
+              <form id="commentForm" method="post" action="{% url 'xl_to_django_attendence' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
                         <input type="file" name="import">
@@ -184,22 +184,27 @@ function toggleModal() {
     </script>
     <table class="table mt-3" style="background-color: rgba(0, 0, 0, 0.568);" id="myTable">
         <thead>
-            <th class="text-center">Sl no.</th>
-            <th class="text-center">Month</th>
-            <th class="text-center">Year</th>
-            <th class="text-center">Holidays</th>
-            <th class="text-center">Working days</th>
+            <tr><th class="text-center">#</th>
+                <th class="text-center">Employee Name</th>
+                <th class="text-center">Year</th>
+                <th class="text-center">Month</th>
+                <th class="text-center">Working Days</th>
+                <th class="text-center">Holidays Days</th>
+                <th class="text-center">Total Absent</th>
+            </tr>
         </thead>
-        {% for key, value in event_counts_json.items %}
-        <tr class="text-light mt-2 pt-1 clickable-row" data-href="{% url 'holidays' key %}">
-            <td class="text-center">{{forloop.counter }}</td>
-            <td class="text-center">{{ value.month }}</td>
-            <td class="text-center">{{ value.year }}</td>
-            <td class="text-center">{{ value.count }}</td>
-            <td class="text-center">{{ value.total_days|sub:value.count }}</td>
-            
-        </tr>
-        {% endfor %}
+        {% for entry in employee_attendance %}
+                                <!-- <tr> -->
+                                    <tr data-employee="{{ entry.employee }}" data-year="{{ entry.year }}" data-month="{{ entry.month }}" class="attendance-row">
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td class="text-center">{{ entry.employee }}</td>
+                                    <td class="text-center">{{ entry.year }}</td>
+                                    <td class="text-center">{{ entry.month }}</td>
+                                    <td class="text-center">{{ entry.working_days }}</td>
+                                    <td class="text-center">{{ entry.holidays }}</td>
+                                    <td class="text-center">{{ entry.absent_days }}</td>
+                                </tr>
+                                {% endfor %}
     </table>
 </div>
 

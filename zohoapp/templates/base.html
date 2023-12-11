@@ -1104,13 +1104,26 @@
         
                                     </li>
                                     <li>
+                                        <div class="dropdown-item">
+                                            <a class="d-inline-block" style="color: #ffffff" href="{% url 'attendence_list' %}">Attendence</a>
+                                            <a class="d-inline-block" style="color: #000000;margin-left: 2px;" href="{% url 'attendence_add' %}">
+                                                <span class="icon bg-light rounded-circle" style="text-align: right; width: 25px;">
+                                                <i class="mdi mdi-plus"></i>
+                                            </span>
+                                            </a>
+                                        </div>
+                                       
+                                        
+
+                                    </li>
+                                    <li>
                                         {% if setting_variable.employees_loan  == "yes" %}                                        
                                         <div class="dropdown-item">
                                             <a class="d-inline-block" style="color: #ffffff" href="{% url 'employee_list' %}">Employe's Loan</a>
                                             <a class="d-inline-block" style="color: #000000;margin-left: 2px;" href="{% url 'employee_list' %}">
                                                 <span class="icon bg-light rounded-circle" style="text-align: right; width: 25px;">
-                    <i class="mdi mdi-plus"></i>
-                  </span>
+                                                    <i class="mdi mdi-plus"></i>
+                                                </span>
                                             </a>
                                         </div>
                                         {% else %}

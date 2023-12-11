@@ -774,11 +774,7 @@ urlpatterns = [
     path('convert_to_invoice/<int:pk>',views.convert_to_invoice,name='convert_to_invoice'),
     path('convert_view/<int:pk>',views.convert_view,name='convert_view'),
     
-    path('holidays/<str:date>',views.holidays,name='holidays'),
-
-    path('all_events', views.all_events, name='all_events'),
-    path('add_holiday/', views.add_holiday, name='add_holiday'), 
-    path('remove/<int:id>', views.remove, name='remove'),
+   
 
     path('create_emp', views.create_emp, name='create_emp'),
     path('getemployee', views.getemployee, name='getemployee'),
@@ -796,7 +792,6 @@ urlpatterns = [
     path('get_item_details/', views.get_item_details, name='get_item_details'),
     
     path('project_active/<int:id>', views.project_active, name='project_active'),
-    path('holiday_list',views.holiday_list,name='holiday_list'),
     path('projentr_custmrA',views.projentr_custmrA,name='projentr_custmrA'),
     
     #-----------------------------Ashikh V U payment_received(start)-------------------------
@@ -947,9 +942,7 @@ urlpatterns = [
     path('product_graphview_btn/<str:pk>',views.product_graphview_btn,name='product_graphview_btn'),
     #End
     
-    path('holiday_add',views.holiday_add,name='holiday_add'),
-    path('holiday_edit/<int:id>',views.holiday_edit,name='holiday_edit'),
-    path('edit_holiday/<int:id>',views.edit_holiday,name='edit_holiday'),
+
     
     path('view_vendor_name',views.view_vendor_name,name='view_vendor_name'),
     path('view_paidthrough',views.view_paidthrough,name='view_paidthrough'),
@@ -989,8 +982,31 @@ urlpatterns = [
 
     path('all_events', views.all_events, name='all_events'),
     path('mail_holyday',views.mail_holyday,name='mail_holyday'),
-    path('xl_to_django',views.xl_to_django,name='xl_to_django')
-    
+    path('xl_to_django',views.xl_to_django,name='xl_to_django'),
+    path('holidays/<str:date>',views.holidays,name='holidays'),
+
+    path('add_holiday/', views.add_holiday, name='add_holiday'), 
+    path('remove/<int:id>', views.remove, name='remove'),
+    path('holiday_add',views.holiday_add,name='holiday_add'),
+    path('holiday_edit/<int:id>',views.holiday_edit,name='holiday_edit'),
+    path('edit_holiday/<int:id>',views.edit_holiday,name='edit_holiday'),
+    path('holiday_list',views.holiday_list,name='holiday_list'),
+
+    path('add_attendence/', views.add_attendence, name='add_attendence'), 
+    path('remove/<int:id>', views.remove, name='remove'),
+    path('attendence_add',views.attendence_add,name='attendence_add'),
+
+    path('attendance/<str:date>',views.attendance,name='attendance'),
+
+    path('all_leave',views.all_leave,name='all_leave'),
+    path('attendence_list',views.attendence_list,name='attendence_list'),
+    path('remove_attendence/<int:id>', views.remove_attendence, name='remove_attendence'),
+    path('edit_attendence/<int:id>',views.edit_attendence,name='edit_attendence'),
+    path('attendence_edit/<int:id>',views.attendence_edit,name='attendence_edit'),
+    path('do_atte_comments',views.do_atte_comments,name='do_atte_comments'),
+
+    path('mail_attendence',views.mail_attendence,name='mail_attendence'),
+    path('xl_to_django_attendence',views.xl_to_django_attendence,name='xl_to_django_attendence'),
     
     
 ]
