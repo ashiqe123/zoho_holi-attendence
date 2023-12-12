@@ -996,7 +996,7 @@ urlpatterns = [
     path('remove/<int:id>', views.remove, name='remove'),
     path('attendence_add',views.attendence_add,name='attendence_add'),
 
-    path('attendance/<str:date>',views.attendance,name='attendance'),
+    path('attendance/<str:date>/<int:id>',views.attendance,name='attendance'),
 
     path('all_leave',views.all_leave,name='all_leave'),
     path('attendence_list',views.attendence_list,name='attendence_list'),

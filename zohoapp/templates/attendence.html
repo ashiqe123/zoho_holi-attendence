@@ -143,7 +143,7 @@
                     <div class="dropdown-menu">
                         <a class="dropdown-item text-light" href="#" onclick="reloadPage()">All</a>
                         <a class="dropdown-item text-light" onclick="sortTableByMonthAsc()">Month</a>
-                        <a class="dropdown-item text-light" onclick="sortTableByCountAsc()">Employee</a>
+                        <a class="dropdown-item text-light" onclick="sortTableByName()">Employee</a>
                     </div>
                 </div>
                 
@@ -161,18 +161,19 @@
           <table class="table table-borderless mt-3" id="mytable">
             <thead>
               <tr >
-                <th style="color: rgb(214, 141, 5);text-align: left;">Month</th>
-                <th style="color: rgb(214, 141, 5);text-align:right">Holiday</th>
+                <th style="color: rgb(214, 141, 5);text-align: left;">Employee</th>
+                <th style="color: rgb(214, 141, 5);text-align:right">Month</th>
               </tr>
               
             </thead>
             
             <tbody id="tableBody">
-                {% for key, value in formatted_event_counts.items %}
-                <tr class="text-light mt-2 pt-1 clickable-row" data-href="{% url 'attendance' key %}">
+              {% for entry in employee_attendance %}
 
-                        <td>{{ value.month }}</td>
-                        <td>{{ value.count }}</td>
+              <tr class="clickable-row" data-href="{% url 'attendance' entry.formatted_month_year entry.e_id %}">
+
+                        <td class="text-light ">{{ entry.employee }}</td>
+                        <td class="text-light ">{{ entry.month }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -180,7 +181,7 @@
             
           </table>
     </div>
-   
+
 
     <div class="card-body col-9 col-md-9 col-lg-9 col-sm-9" id="exTab2">
         <a id="close" type="button" class="btn btn-danger" href="{% url 'attendence_list' %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
@@ -268,7 +269,7 @@
                 <table class="table mt-3" style="background-color: rgba(0, 0, 0, 0.568);">
                     <thead>
                         <th>Sl no.</th>
-                        <th >Employee</th>
+                        <th >employee</th>
                         <th>leave</th>
                         <th>start_date</th>
                         <th>end_date</th>
@@ -279,7 +280,7 @@
                     <tr class="text-light mt-2 pt-1">
                         <td>{{forloop.counter }}</td>
                         <td>{{i.payroll.first_name }} {{i.payroll.last_name }}</td>
-                        <td>{{i.leave}}</td>
+                        <td>{{i.reason}}</td>
                         <td>{{i.start_date | date:"M. d, Y" }}</td>
                         <td>{{i.end_date | date:"M. d, Y" }}</td>
                         <td style="font-size: 1.2rem;">
@@ -326,7 +327,7 @@
                         
                         <td class="text-black">{{forloop.counter }}</td>
                         <td class="text-black">{{i.payroll.first_name }} {{i.payroll.last_name }}</td>
-                        <td class="text-black">{{i.leave}}</td>
+                        <td class="text-black">{{i.reason}}</td>
                         <td class="text-black">{{i.start_date | date:"M. d, Y" }}</td>
                         <td class="text-black">{{i.end_date | date:"M. d, Y" }}</td>
                        
@@ -459,53 +460,47 @@
         window.location.href = currentUrl;
     }
 </script>
+
 <script>
-    function sortTableByCountAsc() {
-        var rows = $('tr.clickable-row').get();
-        console.log(rows);
-        console.log('Sorting by Count');
+  function sortTableByName() {
+      var rows = $('tr.clickable-row').get();
+      console.log(rows);
+      console.log('Sorting by Employee Name');
 
-        rows.sort(function (a, b) {
-            var countA = parseInt($(a).find('td:eq(1)').text()); // Assuming count is in the second column
-            var countB = parseInt($(b).find('td:eq(1)').text());
+      rows.sort(function (a, b) {
+          var nameA = $(a).find('td:eq(0)').text(); // Assuming employee name is in the first column
+          var nameB = $(b).find('td:eq(0)').text();
 
-            return countA - countB;
-        });
+          return nameA.localeCompare(nameB);
+      });
 
-        $.each(rows, function (index, row) {
-            $('#mytable tbody').append(row);
-        });
-    }
+      $.each(rows, function (index, row) {
+          $('#mytable tbody').append(row);
+      });
+  }
 </script>
-
 <script>
-    function sortTableByMonthAsc() {
-        var rows = $('tr.clickable-row').get();
-        console.log(rows);
-        console.log('suuupi');
+  function sortTableByMonthAsc() {
+    var rows = $('tr.clickable-row').get();
 
-        rows.sort(function (a, b) {
-            var monthA = $(a).find('td:eq(0)').text(); // Assuming month is in the first column
-            var monthB = $(b).find('td:eq(0)').text();
+    rows.sort(function (a, b) {
+      var monthA = $(a).find('td:eq(0)').text(); // Assuming month is in the first column
+      var monthB = $(b).find('td:eq(0)').text();
 
-            var yearA = $(a).find('td:eq(1)').text(); // Assuming year is in the second column
-            var yearB = $(b).find('td:eq(1)').text();
+      var yearA = $(a).find('td:eq(1)').text(); // Assuming year is in the second column
+      var yearB = $(b).find('td:eq(1)').text();
 
-            var monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            var monthAIndex = monthOrder.indexOf(monthA);
-            var monthBIndex = monthOrder.indexOf(monthB);
+      var monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var monthAIndex = monthOrder.indexOf(monthA);
+      var monthBIndex = monthOrder.indexOf(monthB);
 
-            if (yearA === yearB) {
-                return monthAIndex - monthBIndex;
-            } else {
-                return yearA - yearB;
-            }
-        });
+      return yearA.localeCompare(yearB) || monthAIndex - monthBIndex;
+    });
 
-        $.each(rows, function (index, row) {
-            $('#mytable tbody').append(row);
-        });
-    }
+    $.each(rows, function (index, row) {
+      $('#mytable tbody').append(row);
+    });
+  }
 </script>
 
 <script>

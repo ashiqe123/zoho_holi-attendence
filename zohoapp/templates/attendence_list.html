@@ -3,6 +3,7 @@
 {% load static %}
 {% load mathfilters %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha384-GLhlTQ8iXH8C+XB7u6UB8OVvTt8+MH9DJz6qJ/6Yzm77R1Ev1Mvq+1G70MlO2Ls-" crossorigin="anonymous"></script>
 
 
 <style>
@@ -61,7 +62,7 @@
     <div>
         <center>
             
-            <h2 class="mt-4" id="headline">ALL HOLIDAYS</h2>
+            <h2 class="mt-4" id="headline">ALL ATTENDENCE</h2>
             <div class="display">
                 
             </div>
@@ -183,28 +184,31 @@ function toggleModal() {
     }
     </script>
     <table class="table mt-3" style="background-color: rgba(0, 0, 0, 0.568);" id="myTable">
-        <thead>
-            <tr><th class="text-center">#</th>
-                <th class="text-center">Employee Name</th>
-                <th class="text-center">Year</th>
-                <th class="text-center">Month</th>
-                <th class="text-center">Working Days</th>
-                <th class="text-center">Holidays Days</th>
-                <th class="text-center">Total Absent</th>
-            </tr>
-        </thead>
+      <thead>
+        <tr><th class="text-center">#</th>
+            <th class="text-center">Employee Name</th>
+            <th class="text-center">Year</th>
+            <th class="text-center">Month</th>
+            <th class="text-center">Working Days</th>
+            <th class="text-center">Holidays Days</th>
+            <th class="text-center">Total Absent</th>
+        </tr>
+    </thead>
+    <tbody id="table">
         {% for entry in employee_attendance %}
-                                <!-- <tr> -->
-                                    <tr data-employee="{{ entry.employee }}" data-year="{{ entry.year }}" data-month="{{ entry.month }}" class="attendance-row">
-                                    <td class="text-center">{{ forloop.counter }}</td>
-                                    <td class="text-center">{{ entry.employee }}</td>
-                                    <td class="text-center">{{ entry.year }}</td>
-                                    <td class="text-center">{{ entry.month }}</td>
-                                    <td class="text-center">{{ entry.working_days }}</td>
-                                    <td class="text-center">{{ entry.holidays }}</td>
-                                    <td class="text-center">{{ entry.absent_days }}</td>
-                                </tr>
-                                {% endfor %}
+        
+        <!-- <tr> -->
+            <tr class="clickable-row text-light" data-href="{% url 'attendance' entry.formatted_month_year entry.e_id %}">
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td class="text-center">{{ entry.employee }}</td>
+            <td class="text-center">{{ entry.year }}</td>
+            <td class="text-center">{{ entry.month }}</td>
+            <td class="text-center">{{ entry.working_days }}</td>
+            <td class="text-center">{{ entry.holidays }}</td>
+            <td class="text-center">{{ entry.absent_days }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
     </table>
 </div>
 
