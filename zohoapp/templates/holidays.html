@@ -247,8 +247,8 @@
                           <i class="fa fa-share-alt mt-1"></i>Share
                       </a>
                       <div class="dropdown-menu m-1">
-                          <a class="dropdown-item" href="{% url 'mail_holyday' %}">Email</a>
-                          <a class="dropdown-item" href="https://web.whatsapp.com/" target="_blank">Whatsapp</a>
+                        <a class="dropdown-item" href="https://www.google.com/gmail" target="_blank">Email</a>
+                        <a class="dropdown-item" href="https://web.whatsapp.com/" target="_blank">Whatsapp</a>
                       </div>
                       
                         <a style="height: 5vh; margin-left: 2vh;" class="btn btn-outline-warning text-right" onclick="printSection('selected-area')" role="button" style="margin-left: 5px;"  >
@@ -555,9 +555,9 @@
     // const currentDate = new Date();
     $('#calendar').fullCalendar({
             header: {
-                left: 'prev,next today',
+                left: 'prev,next ',
                 center: 'title',
-                right: 'month,agendaWeek,agendaDay',
+                right: 'today',
             },
             initialView: 'dayGridMonth',
         defaultDate: defaultDate,

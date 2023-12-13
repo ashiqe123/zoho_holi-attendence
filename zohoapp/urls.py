@@ -1007,6 +1007,11 @@ urlpatterns = [
 
     path('mail_attendence',views.mail_attendence,name='mail_attendence'),
     path('xl_to_django_attendence',views.xl_to_django_attendence,name='xl_to_django_attendence'),
+
+    #new
+    path('check_leave_dates', views.check_leave_dates, name='check_leave_dates'),
+    path('check_holi_dates', views.check_holi_dates, name='check_holi_dates'),
+
     
     
 ]

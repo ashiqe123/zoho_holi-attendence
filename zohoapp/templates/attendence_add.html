@@ -85,6 +85,7 @@
 <hr>
 
 
+
         <button type="submit" class="btn text-white" style="background-color: rgb(210, 132, 30);"
       id="save-btn">Save</button>
     <button type="reset" class="btn text-white" style="background-color: rgb(210, 132, 30);"
@@ -93,6 +94,37 @@
     
 </div>
 
+<script>
+    $(document).ready(function () {
+        $('#project-form').submit(function (event) {
+            event.preventDefault();  // Prevent the default form submission
+    
+            var employeeId = $('#employee').val(); // Get the selected employee ID
+            var startDate = $('input[name="start"]').val();
+            var endDate = $('input[name="end"]').val();
+    
+            $.ajax({
+                url: 'check_leave_dates',
+                data: {
+                    'employee': employeeId,
+                    'start': startDate,
+                    'end': endDate
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        // Proceed with form submission
+                        $('#project-form')[0].submit();
+                    }
+                }
+            });
+        });
+    });
+    </script>
+        
+    
 
 <div class="modal fade" id="newvendor">
     <div class="modal-dialog modal-xl">
@@ -153,6 +185,20 @@
                             </div>
                             <div class="input-container col-6">
                                 <input type="date" class="form-control text-dark" name="joindate2" id="joindate2" required>
+                                
+                            </div>
+                        </div>
+                        <div class="row pb-3">
+                            <div class="col-6">
+                                <label for="sdate">Salary Date</label>
+                            </div>
+                            <div class="input-container col-6">
+                                <select class="form-control text-dark" name="salary_range" id="sdate_range" >
+                                    <option value="">Select date range</option>
+                                    <option value="1-10">1-10</option>
+                                    <option value="10-15">10-15</option>
+                                    <option value="15-31">15-31</option>
+                                </select>
                                 
                             </div>
                         </div>
@@ -280,13 +326,19 @@
                                 </select>
                             </div>
                         </div>
+
                         <div class="row pb-3">
                             <div class="col-6">
                                 <label for="">Date of Birth</label>
                             </div>
-                            <div class="col-6"><input type="date" class="form-control text-dark" name="dob" id="dob" required></div>
+                            <div class="col-6"><input type="date" class="form-control text-dark"  id="dob" name="dob" onchange="calculateAge()" required></div>
                         </div>
-                        
+                        <div class="row pb-3">
+                            <div class="col-6">
+                                <label for="">Age</label>
+                            </div>
+                            <div class="col-6"><input type="" class="form-control text-dark"  id="age" name="age" readonly></div>
+                        </div>
                         <div class="row pb-3">
                             <div class="col-6">
                                 <label for="">Blood Group</label>
@@ -630,6 +682,8 @@ if (!isNaN(joindate2Date.getTime()) && !isNaN(dobDate.getTime())) {
             uan: $("#uan").val(),
             pfn: $("#pfn").val(),
             pran: $("#pran").val(),
+            age: $("#age").val(),
+            sdate_range: $("#sdate_range").val(),
             joindate2: joindate2Formatted,
             dob: dobFormatted,
             
@@ -959,8 +1013,25 @@ function updateMonthlyCuttingAmount() {
         $("#payrollModalButton").on("click", function() {
             loadPayrollModalContent(); // Load content when the button is clicked
         });
+        
     });
 </script>
+<script>
+        function calculateAge() {
+      // Get the selected date of birth from the input field
+      const dobInput = document.getElementById("dob");
+      const selectedDateOfBirth = new Date(dobInput.value);
 
+      // Get the current date
+      const currentDate = new Date();
+
+      // Calculate the difference in years
+      const age = currentDate.getFullYear() - selectedDateOfBirth.getFullYear();
+
+      // Display the calculated age in the age input field
+      const ageInput = document.getElementById("age");
+      ageInput.value = age;
+    }
+</script>
 
 {% endblock %}

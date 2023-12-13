@@ -62,4 +62,32 @@
     
 </div>
 
+<script>
+  $(document).ready(function () {
+      $('#project-form').submit(function (event) {
+          event.preventDefault();  // Prevent the default form submission
+  
+          var startDate = $('input[name="start"]').val();
+          var endDate = $('input[name="end"]').val();
+  
+          $.ajax({
+              url: 'check_holi_dates',
+              data: {
+                  'start': startDate,
+                  'end': endDate
+              },
+              dataType: 'json',
+              success: function (data) {
+                  if (data.error) {
+                      alert(data.error);
+                  } else {
+                      // Proceed with form submission
+                      $('#project-form')[0].submit();
+                  }
+              }
+          });
+      });
+  });
+  </script>
+
 {% endblock %}
