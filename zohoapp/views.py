@@ -21024,6 +21024,7 @@ def holidays(request, date):
     global valu
     company = company_details.objects.get(user=request.user)
     all_events = Events.objects.filter(company=company)
+    comments = Events_comments.objects.filter(company=company)
     event_counts = {}
     event_dict = {}
     valu = date
@@ -21036,7 +21037,6 @@ def holidays(request, date):
     else:
         end_date = start_date.replace(month=month_number + 1)
     end_date -= timedelta(days=1)
-    event_comment = Events_comments.objects.get(company = company)
     events = Events.objects.filter(start_date__gte=start_date, start_date__lt=end_date)
 
     for event in events:
@@ -21093,7 +21093,7 @@ def holidays(request, date):
         "eve": events,
         'formatted_event_counts':formatted_event_counts,
         'month':month,
-        'event_comment':event_comment,
+        'comments':comments
     }
     return render(request, 'holidays.html', context)
 
@@ -21139,64 +21139,9 @@ def holiday_edit(request,id):
 
 
 
-def remove(request,id):
-    event = Events.objects.get(id=id)                                                                                    
-    event.delete()
-    return redirect('holiday_list')
 
 
-def holiday_list(request):
-    company = company_details.objects.get(user=request.user)
-    if not  Events_comments.objects.filter(company=company).exists():
-        event = Events_comments(company=company,comments='Comment')
-        event.save()
-    all_events = Events.objects.filter(company=company)
-    event_counts = {}
-    formatted_event_counts = {}
-
-    for event in all_events:
-        month_year = event.start_date.strftime('%Y-%m')  # Format: 'YYYY-MM'
-        year, month = map(int, month_year.split('-'))
-        
-        event_duration = (event.end_date - event.start_date).days+1 if event.end_date else 1
-
-        print(event_duration)
-    # If the month_year is not in the dictionary, add it with a count of 1
-        if month_year not in event_counts:
-            event_counts[month_year] = event_duration
-        else:
-        # If the month_year is already in the dictionary, increment the count
-            event_counts[month_year] += event_duration
-        
-
-
-    for key, value in event_counts.items():
-        # year, month = key.split('-')
-        year, month = map(int, key.split('-'))
-        total_days = calendar.monthrange(year, month)[1]
-        month_name = calendar.month_name[int(month)]
-        formatted_month_year = f"{month_name}-{year}"
-        # formatted_event_counts[formatted_month_year] = value   
-        formatted_event_counts[formatted_month_year] = {'count': value, 'total_days': total_days,'month':month_name,'year':year}
-
-    context = {
-        "events": all_events,
-        "event_counts_json": formatted_event_counts,
-        "company":company
-    }
-    return render(request, 'holiday_list.html',context)
-    
-def do_comments(request):
-    company = company_details.objects.get(user=request.user)
-    if request.method == 'POST':
-        comment = request.POST['comments']
-        event = Events_comments.objects.get(company=company)
-        event.comments = comment
-        event.save()
-        print(comment)
-    return redirect('holidays',valu)
-
-
+ 
 def mail_holyday(request):
 
         if request.method == 'POST':
@@ -21260,12 +21205,313 @@ def xl_to_django(request):
 
 from calendar import monthrange
 
+def add_attendence(request):
+    company = company_details.objects.get(user=request.user)
+
+    if request.method=='POST':
+        title = request.POST['title']
+        start = request.POST['start']
+        end = request.POST['end']
+        leave = request.POST['leave']
+        payroll = request.POST['employee']
+        payroll = Payroll.objects.get(id=payroll)
+        event = Attendance(reason=title,leave = leave,start_date=start, end_date=end,company=company,payroll=payroll)
+        event.save()
+        print('done')
+        return redirect('attendence_list')
+    return redirect('attendence_list')
+    
+def attendence_add(request):
+    company = company_details.objects.get(user=request.user)
+    employee = Payroll.objects.filter(user=request.user)
+    return render(request,'attendence_add.html',{'company':company,'employee':employee})
+
+
+
+
+
+def attendence_edit(request,id):
+    company = company_details.objects.get(user=request.user)
+    holi = Attendance.objects.get(id=id)   
+    employee = Payroll.objects.filter(user=request.user)    
+    return render(request,'attendence_edit.html',{'holiday':holi,'company':company,'employee':employee})
+
+
+def edit_attendence(request,id):
+    holi = Attendance.objects.get(id=id)
+    if request.user.is_authenticated:
+        if request.method=='POST':
+            pay = request.POST.get('employee') 
+            print(pay)
+            pay = Payroll.objects.get(id=pay)
+            holi.payroll=pay
+            holi.reason=request.POST.get('title')  
+            holi.leave=request.POST.get('leave')  
+            holi.start_date=request.POST.get('start')  
+            holi.end_date=request.POST.get('end')  
+            holi.save()
+            e_id = holi.payroll.id
+            print(e_id)
+    start_date_string = holi.start_date  # Example: '2023-11-15'
+    start_date = datetime.strptime(start_date_string, '%Y-%m-%d')
+    formatted_month_year = start_date.strftime('%B-%Y')
+    return redirect('attendance',formatted_month_year,e_id) 
+
+
+
+
+def mail_attendence(request):
+
+        if request.method == 'POST':
+                
+            subject =request.POST['subject']
+            message = request.POST['messege']
+            email = request.POST['email']
+            files = request.FILES.getlist('attach')
+
+            try:
+                mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, [email])
+                for f in files:
+                    mail.attach(f.name, f.read(), f.content_type)
+                mail.send()
+                return render(request, 'mail_attendence.html')
+            except:
+               return render(request, 'mail_attendence.html')
+
+        return render(request, 'mail_attendence.html')
+
+
+
+
+#########################
+
+from django.http import Http404
+def remove_attendence(request, id):
+    try:
+        event = Attendance.objects.get(id=id)
+        e_id = event.payroll.id
+        print(e_id)
+
+        start_date = event.start_date
+        formatted_month_year = start_date.strftime('%B-%Y')
+
+        event.delete()
+        
+        # Check if there are any remaining objects after deletion
+        remaining_events = Attendance.objects.filter(payroll_id=e_id)
+        if not remaining_events:
+            return redirect('attendence_list')
+
+        return redirect('attendance', formatted_month_year, e_id)
+    except Attendance.DoesNotExist:
+        raise Http404("Attendance not found")
+def edit_holiday(request,id):
+    holi = Events.objects.get(id=id)
+    company = company_details.objects.get(user=request.user)
+    
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            title = request.POST.get('title')   
+            start = request.POST.get('start')
+            end = request.POST.get('end')  
+            
+            if not Events.objects.filter(start_date=start, company=company).exists():
+                holi.name = title
+                holi.start_date = start
+                holi.end_date = end
+                holi.save()
+    
+    formatted_month_year = holi.start_date.strftime('%B-%Y')
+    print(formatted_month_year)
+    
+    holidays_url = reverse('holidays', kwargs={'date': formatted_month_year})
+    return redirect(holidays_url)
+
+
+
+def all_leave(request):
+    company = company_details.objects.get(user=request.user)
+
+    all_events = Attendance.objects.filter(company=company,payroll=val_id)
+    print(all_events)
+    print('done')
+    out = []
+
+    all_event = Events.objects.filter(company=company)
+    print(all_events)
+    print('done')
+
+    for event in all_event:
+        out.append({
+            'title': event.name,
+            'start': event.start_date.date(),
+            'end': (event.end_date + timedelta(days=1)).date() if event.end_date else event.start.date(),
+            'color': 'red',
+            'allDay': 'true',
+        })
+
+    for event in all_events:
+        # Assuming 'payroll' is the foreign key to the Payroll model in the Attendance model
+        payroll_id = event.payroll.id if event.payroll else None
+
+        out.append({
+            'title': event.reason,
+            'start': event.start_date.date(),
+            'end': (event.end_date + timedelta(days=1)).date() if event.end_date else event.start.date(),
+            'color': 'blue',
+            'allDay': 'true',
+        })
+
+    return JsonResponse(out, safe=False)
+    
+def check_leave_dates(request):
+    company = company_details.objects.get(user=request.user)
+
+    employee_id = request.GET.get('employee', None)
+    start_date = request.GET.get('start', None)
+    end_date = request.GET.get('end', None)
+    employee_id = Payroll.objects.get(id = employee_id)
+    data = {}
+
+    if Attendance.objects.filter(payroll=employee_id,start_date=start_date,company=company).exists():
+        data['error'] = 'Leave dates already exist for the selected employee.'
+    elif Attendance.objects.filter(payroll=employee_id, end_date=end_date,company=company).exists():
+        data['error'] = 'Leave dates already exist for the selected employee.'
+    elif Events.objects.filter(end_date=end_date,company=company).exists():
+        data['error'] = 'Its a holi day in your Company'
+    elif Events.objects.filter(start_date=start_date,company=company).exists():
+        data['error'] = 'Its a holi day in your Company'
+
+    return JsonResponse(data)
+
+
+def check_holi_dates(request):
+    company = company_details.objects.get(user=request.user)
+
+    start_date = request.GET.get('start', None)
+    end_date = request.GET.get('end', None)
+
+    data = {}
+
+
+    if Events.objects.filter(end_date=end_date,company=company).exists():
+        data['error'] = 'the date has marked already'
+    elif Events.objects.filter(start_date=start_date,company=company).exists():
+        data['error'] = 'the date has marked already'
+
+    return JsonResponse(data)
+
+
+    
+def xl_to_django_attendence(request):
+    company = company_details.objects.get(user=request.user)
+    try:
+        if request.method == 'POST':
+            excel_file = request.FILES['import']
+            
+            # Read the Excel file using pandas
+            df = pd.read_excel(excel_file)
+            
+            # Iterate through rows and create instances of YourModel
+            for index, row in df.iterrows():
+                start_date = row['start_date']
+                end_date = row['end_date']
+                reason = row['reason']
+                payroll = row['employee']
+                leave = row['leave']
+                first,last =payroll.split(' ')
+                print(payroll)
+                print(first)
+                pay = Payroll.objects.get(first_name=first,last_name=last)
+                print(pay)
+                # Check if an entry with the same start date, end date, name, and company already exists
+                existing_entry = Attendance.objects.filter(
+                    start_date=start_date,
+                    end_date=end_date,
+                    
+                    company=company,
+                    payroll = pay
+                    
+
+                ).first()
+
+                # If the entry does not exist, create a new one
+                if not existing_entry:
+                    Attendance.objects.create(
+                        start_date=start_date,
+                        end_date=end_date,
+                        leave = 'LEAVE',
+                        payroll=pay,
+                        reason=reason,
+                        company=company
+                        # Add other fields as needed
+                    )
+
+
+            # Redirect or render a response
+            return redirect('attendence_list')  # Replace 'success_page' with your success page URL
+    except Exception as e:
+        # Print the error message (you might want to log it)
+        print(f"Data enterd wrong formate check the overview page: {e}")
+        return redirect('attendence_list')
+
+
+   
+def do_comments(request):
+    company = company_details.objects.get(user=request.user)
+    if request.method == 'POST':
+        comment = request.POST['comments']
+        event = Events_comments(company=company,comments=comment)
+        
+        event.save()
+        print(comment)
+    return redirect('holidays',valu)
+
+def holiday_list(request):
+    company = company_details.objects.get(user=request.user)
+    all_events = Events.objects.filter(company=company)
+    event_counts = {}
+    formatted_event_counts = {}
+
+    for event in all_events:
+        month_year = event.start_date.strftime('%Y-%m')  # Format: 'YYYY-MM'
+        year, month = map(int, month_year.split('-'))
+        
+        event_duration = (event.end_date - event.start_date).days+1 if event.end_date else 1
+
+        print(event_duration)
+    # If the month_year is not in the dictionary, add it with a count of 1
+        if month_year not in event_counts:
+            event_counts[month_year] = event_duration
+        else:
+        # If the month_year is already in the dictionary, increment the count
+            event_counts[month_year] += event_duration
+        
+
+
+    for key, value in event_counts.items():
+        # year, month = key.split('-')
+        year, month = map(int, key.split('-'))
+        total_days = calendar.monthrange(year, month)[1]
+        month_name = calendar.month_name[int(month)]
+        formatted_month_year = f"{month_name}-{year}"
+        # formatted_event_counts[formatted_month_year] = value   
+        formatted_event_counts[formatted_month_year] = {'count': value, 'total_days': total_days,'month':month_name,'year':year}
+
+    context = {
+        "events": all_events,
+        "event_counts_json": formatted_event_counts,
+        "company":company,
+    }
+    return render(request, 'holiday_list.html',context)
+
+
+
+
 def attendence_list(request):
     company = company_details.objects.get(user=request.user)
 
-    if not Attendance_comments.objects.filter(company=company).exists():
-        event = Attendance_comments(company=company, comments='Comment')
-        event.save()
+
 
     all_events = Attendance.objects.filter(company=company)
     event_counts = {}
@@ -21339,27 +21585,19 @@ def attendence_list(request):
     }
     return render(request, 'attendence_list.html', context)
 
-def add_attendence(request):
-    company = company_details.objects.get(user=request.user)
 
-    if request.method=='POST':
-        title = request.POST['title']
-        start = request.POST['start']
-        end = request.POST['end']
-        leave = request.POST['leave']
-        payroll = request.POST['employee']
-        payroll = Payroll.objects.get(id=payroll)
-        event = Attendance(reason=title,leave = leave,start_date=start, end_date=end,company=company,payroll=payroll)
+
+
+
+       
+def do_atte_comments(request):
+    company = company_details.objects.get(user=request.user)
+    if request.method == 'POST':
+        comment = request.POST['comments']
+        event = Attendance_comments(company=company,comments=comment)
         event.save()
-        print('done')
-        return redirect('attendence_list')
-    return redirect('attendence_list')
-    
-def attendence_add(request):
-    company = company_details.objects.get(user=request.user)
-    employee = Payroll.objects.filter(user=request.user)
-    return render(request,'attendence_add.html',{'company':company,'employee':employee})
-
+        print(comment)
+    return redirect('attendance',valu,val_id)
 
 
 def attendance(request, date,id):
@@ -21368,6 +21606,7 @@ def attendance(request, date,id):
     print(id)
     company = company_details.objects.get(user=request.user)
     all_events = Attendance.objects.filter(company=company)
+    all_comments = Attendance_comments.objects.filter(company=company)
     event_counts = {}
     event_dict = {}
     valu = date
@@ -21381,7 +21620,6 @@ def attendance(request, date,id):
     else:
         end_date = start_date.replace(month=month_number + 1)
     end_date -= timedelta(days=1)
-    event_comment = Attendance_comments.objects.get(company = company)
     events = Attendance.objects.filter(start_date__gte=start_date, start_date__lt=end_date,payroll=id)
 
     for event in events:
@@ -21477,133 +21715,35 @@ def attendance(request, date,id):
         "eve": events,
         'formatted_event_counts':formatted_event_counts,
         'month':month,
-        'event_comment':event_comment,
         'employee_attendance': list(employee_attendance.values()),
+        'all_comments':all_comments,
 
     }
     return render(request, 'attendence.html', context)
 
 
-def attendence_edit(request,id):
-    company = company_details.objects.get(user=request.user)
-    holi = Attendance.objects.get(id=id)   
-    employee = Payroll.objects.filter(user=request.user)    
-    return render(request,'attendence_edit.html',{'holiday':holi,'company':company,'employee':employee})
 
 
-def edit_attendence(request,id):
-    holi = Attendance.objects.get(id=id)
-    if request.user.is_authenticated:
-        if request.method=='POST':
-            pay = request.POST.get('employee') 
-            print(pay)
-            pay = Payroll.objects.get(id=pay)
-            holi.payroll=pay
-            holi.reason=request.POST.get('title')  
-            holi.leave=request.POST.get('leave')  
-            holi.start_date=request.POST.get('start')  
-            holi.end_date=request.POST.get('end')  
-            holi.save()
-            e_id = holi.payroll.id
-            print(e_id)
-    start_date_string = holi.start_date  # Example: '2023-11-15'
-    start_date = datetime.strptime(start_date_string, '%Y-%m-%d')
-    formatted_month_year = start_date.strftime('%B-%Y')
-    return redirect('attendance',formatted_month_year,e_id) 
+
+def del_event_comment(request,id):
+    del_event =Events_comments.objects.get(id=id)
+    del_event.delete()
+    return redirect('holidays',valu)
 
 
-   
-def do_atte_comments(request):
-    company = company_details.objects.get(user=request.user)
-    if request.method == 'POST':
-        comment = request.POST['comments']
-        event = Attendance_comments.objects.get(company=company)
-        event.comments = comment
-        event.save()
-        print(comment)
+def del_atte_comment(request,id):
+    del_event =Attendance_comments.objects.get(id=id)
+    del_event.delete()
     return redirect('attendance',valu,val_id)
 
 
-def mail_attendence(request):
+    
 
-        if request.method == 'POST':
-                
-            subject =request.POST['subject']
-            message = request.POST['messege']
-            email = request.POST['email']
-            files = request.FILES.getlist('attach')
-
-            try:
-                mail = EmailMessage(subject, message, settings.EMAIL_HOST_USER, [email])
-                for f in files:
-                    mail.attach(f.name, f.read(), f.content_type)
-                mail.send()
-                return render(request, 'mail_attendence.html')
-            except:
-               return render(request, 'mail_attendence.html')
-
-        return render(request, 'mail_attendence.html')
-
-
-
-def xl_to_django_attendence(request):
+def remove(request,id):
     company = company_details.objects.get(user=request.user)
 
-    if request.method == 'POST':
-        excel_file = request.FILES['import']
-        
-        # Read the Excel file using pandas
-        df = pd.read_excel(excel_file)
-        
-        # Iterate through rows and create instances of YourModel
-        for index, row in df.iterrows():
-            start_date = row['start_date']
-            end_date = row['end_date']
-            reason = row['reason']
-            payroll = row['employee']
-            leave = row['leave']
-            first,last =payroll.split(' ')
-            print(payroll)
-            print(first)
-            pay = Payroll.objects.get(first_name=first,last_name=last)
-            print(pay)
-            # Check if an entry with the same start date, end date, name, and company already exists
-            existing_entry = Attendance.objects.filter(
-                start_date=start_date,
-                end_date=end_date,
-                
-                company=company,
-                
-
-            ).first()
-
-            # If the entry does not exist, create a new one
-            if not existing_entry:
-                Attendance.objects.create(
-                    start_date=start_date,
-                    end_date=end_date,
-                    leave = 'LEAVE',
-                    payroll=pay,
-                    reason=reason,
-                    company=company
-                    # Add other fields as needed
-                )
-
-
-        # Redirect or render a response
-        return redirect('attendence_list')  # Replace 'success_page' with your success page URL
-
-    return redirect('attendence_list')
-
-
-#########################
-
-from django.http import Http404
-def remove_attendence(request, id):
     try:
-        event = Attendance.objects.get(id=id)
-        e_id = event.payroll.id
-        print(e_id)
+        event = Events.objects.get(id=id)
 
         start_date = event.start_date
         formatted_month_year = start_date.strftime('%B-%Y')
@@ -21611,95 +21751,11 @@ def remove_attendence(request, id):
         event.delete()
         
         # Check if there are any remaining objects after deletion
-        remaining_events = Attendance.objects.filter(payroll_id=e_id)
+        remaining_events = Events.objects.filter(company=company)
         if not remaining_events:
-            return redirect('attendence_list')
+            return redirect('holiday_list')
 
-        return redirect('attendance', formatted_month_year, e_id)
-    except Attendance.DoesNotExist:
-        raise Http404("Attendance not found")
-def edit_holiday(request,id):
-    holi = Events.objects.get(id=id)
-    company = company_details.objects.get(user=request.user)
-    
-    if request.user.is_authenticated:
-        if request.method == 'POST':
-            title = request.POST.get('title')   
-            start = request.POST.get('start')
-            end = request.POST.get('end')  
-            
-            if not Events.objects.filter(start_date=start, company=company).exists():
-                holi.name = title
-                holi.start_date = start
-                holi.end_date = end
-                holi.save()
-    
-    formatted_month_year = holi.start_date.strftime('%B-%Y')
-    print(formatted_month_year)
-    
-    holidays_url = reverse('holidays', kwargs={'date': formatted_month_year})
-    return redirect(holidays_url)
+        return redirect('holidays',formatted_month_year)
+    except Events.DoesNotExist:
+        raise Http404("Holiday not found")
 
-
-
-def all_leave(request):
-    company = company_details.objects.get(user=request.user)
-
-    all_events = Attendance.objects.filter(company=company)
-    print(all_events)
-    print('done')
-    out = []
-    all_event = Events.objects.filter(company=company)
-    print(all_events)
-    print('done')
-    for event in all_event:
-        out.append({
-            'title': event.name,
-            'start': event.start_date.date(),
-            'end': (event.end_date + timedelta(days=1)).date() if event.end_date else event.start.date(),
-            'color': 'red',
-            'allDay': 'true',
-        })
-
-    for event in all_events:
-        out.append({
-            'title': event.leave,
-            'start': event.start_date.date(),
-            'end': (event.end_date + timedelta(days=1)).date() if event.end_date else event.start.date(),
-            'color': 'blue',
-            'allDay': 'true',
-        })
-    return JsonResponse(out, safe=False)
-
-def check_leave_dates(request):
-    employee_id = request.GET.get('employee', None)
-    start_date = request.GET.get('start', None)
-    end_date = request.GET.get('end', None)
-    employee_id = Payroll.objects.get(id = employee_id)
-    data = {}
-
-    if Attendance.objects.filter(payroll=employee_id, start_date=start_date).exists():
-        data['error'] = 'Leave dates already exist for the selected employee.'
-    elif Attendance.objects.filter(payroll=employee_id,  end_date=end_date).exists():
-        data['error'] = 'Leave dates already exist for the selected employee.'
-    elif Events.objects.filter(end_date=end_date).exists():
-        data['error'] = 'Its a holy day in your Company'
-    elif Events.objects.filter(start_date=start_date).exists():
-        data['error'] = 'Its a holy day in your Company'
-
-    return JsonResponse(data)
-
-
-def check_holi_dates(request):
-    start_date = request.GET.get('start', None)
-    end_date = request.GET.get('end', None)
-
-    data = {}
-
-
-    if Events.objects.filter(end_date=end_date).exists():
-        data['error'] = 'the date has marked already'
-    elif Events.objects.filter(start_date=start_date).exists():
-        data['error'] = 'the date has marked already'
-
-    return JsonResponse(data)

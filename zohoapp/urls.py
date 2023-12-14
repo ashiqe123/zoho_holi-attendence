@@ -1012,6 +1012,10 @@ urlpatterns = [
     path('check_leave_dates', views.check_leave_dates, name='check_leave_dates'),
     path('check_holi_dates', views.check_holi_dates, name='check_holi_dates'),
 
+
+    path('del_event_comment/<int:id>',views.del_event_comment,name='del_event_comment'),
+    path('del_atte_comment/<int:id>',views.del_atte_comment,name='del_atte_comment')
+
     
     
 ]
