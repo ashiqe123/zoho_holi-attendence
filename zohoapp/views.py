@@ -21037,7 +21037,7 @@ def holidays(request, date):
     else:
         end_date = start_date.replace(month=month_number + 1)
     end_date -= timedelta(days=1)
-    events = Events.objects.filter(start_date__gte=start_date, start_date__lt=end_date)
+    events = Events.objects.filter(start_date__gte=start_date, start_date__lt=end_date,company=company)
 
     for event in events:
         day = event.start_date.day
@@ -21305,29 +21305,29 @@ def remove_attendence(request, id):
         return redirect('attendance', formatted_month_year, e_id)
     except Attendance.DoesNotExist:
         raise Http404("Attendance not found")
-def edit_holiday(request,id):
+
+def edit_holiday(request, id):
     holi = Events.objects.get(id=id)
     company = company_details.objects.get(user=request.user)
-    
+
     if request.user.is_authenticated:
         if request.method == 'POST':
             title = request.POST.get('title')   
             start = request.POST.get('start')
             end = request.POST.get('end')  
-            
+
             if not Events.objects.filter(start_date=start, company=company).exists():
                 holi.name = title
-                holi.start_date = start
-                holi.end_date = end
+                
+                # Convert start and end to datetime objects
+                holi.start_date = datetime.strptime(start, '%Y-%m-%d')
+                holi.end_date = datetime.strptime(end, '%Y-%m-%d')
+                
                 holi.save()
-    
+
     formatted_month_year = holi.start_date.strftime('%B-%Y')
-    print(formatted_month_year)
-    
     holidays_url = reverse('holidays', kwargs={'date': formatted_month_year})
     return redirect(holidays_url)
-
-
 
 def all_leave(request):
     company = company_details.objects.get(user=request.user)
@@ -21620,7 +21620,7 @@ def attendance(request, date,id):
     else:
         end_date = start_date.replace(month=month_number + 1)
     end_date -= timedelta(days=1)
-    events = Attendance.objects.filter(start_date__gte=start_date, start_date__lt=end_date,payroll=id)
+    events = Attendance.objects.filter(start_date__gte=start_date, start_date__lt=end_date,payroll=id,company=company)
 
     for event in events:
         day = event.start_date.day
